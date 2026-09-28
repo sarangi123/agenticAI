@@ -35,6 +35,7 @@ def main():
     print("  • 'What is 234 * 567?'        → calculator tool")
     print("  • 'What time is it?'           → time tool")
     print("  • 'Weather in Tokyo?'          → weather tool")
+    print("  • 'FAQ'          → file read tool")
     print("  • 'quit' to exit")
     print("=" * 50)
 

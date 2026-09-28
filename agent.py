@@ -19,8 +19,16 @@ from tools import TOOL_DEFINITIONS, TOOL_REGISTRY
 # System prompt tells the agent who it is and how to behave
 SYSTEM_PROMPT = """You are a helpful AI assistant with access to tools.
 When a user asks something that requires calculation, time, or weather info,
-use the appropriate tool. Always explain your reasoning briefly before giving
-the final answer. Be concise and friendly."""
+use the appropriate tool.
+
+You also have access to a company FAQ via the read_faq tool. Whenever a user
+asks a question that could be answered by the FAQ (such as business hours,
+refunds, shipping, passwords, payment methods, contact info, or orders), call
+read_faq to look up the answer and base your response on its contents. If the
+FAQ does not contain the answer, say so clearly instead of guessing.
+
+Always explain your reasoning briefly before giving the final answer.
+Be concise and friendly."""
 
 
 class Agent:

@@ -1,0 +1,25 @@
+FREQUENTLY ASKED QUESTIONS (FAQ)
+
+Q: What are your business hours?
+A: We are open Monday through Friday, 9:00 AM to 6:00 PM (EST). We are closed on weekends and public holidays.
+
+Q: How do I reset my password?
+A: Go to the login page and click "Forgot Password". Enter your registered email address and follow the link we send you. The reset link expires after 30 minutes.
+
+Q: What payment methods do you accept?
+A: We accept Visa, Mastercard, American Express, and PayPal. We do not accept cash or checks.
+
+Q: What is your refund policy?
+A: You can request a full refund within 30 days of purchase. Refunds are processed within 5-7 business days to the original payment method.
+
+Q: How can I contact customer support?
+A: You can reach customer support by email at support@example.com or by phone at 1-800-555-0199 during business hours.
+
+Q: Do you offer international shipping?
+A: Yes, we ship to over 50 countries. International shipping times range from 7 to 21 business days depending on the destination.
+
+Q: How do I track my order?
+A: Once your order ships, you will receive a tracking number by email. You can enter that number on our website's "Track Order" page.
+
+Q: Can I change or cancel my order after placing it?
+A: Orders can be changed or cancelled within 1 hour of being placed. After that, the order enters processing and cannot be modified.

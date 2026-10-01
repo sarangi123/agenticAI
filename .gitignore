@@ -28,3 +28,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temp to-do list storage
+todo_list.json

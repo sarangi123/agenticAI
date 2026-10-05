@@ -6,7 +6,6 @@ The agent sees tool descriptions, decides which one to call, and uses the result
 to continue reasoning.
 """
 
-import json
 import math
 import os
 from datetime import datetime
@@ -15,8 +14,9 @@ from datetime import datetime
 # Path to the FAQ file (sits next to this module)
 FAQ_FILE_PATH = os.path.join(os.path.dirname(__file__), "faq.txt")
 
-# Path to the temp JSON file that stores the to-do list (sits next to this module)
-TODO_FILE_PATH = os.path.join(os.path.dirname(__file__), "todo_list.json")
+# In-memory store for the to-do list. This lives only while the program is
+# running; the list resets to empty every time the app restarts.
+_TODO_ITEMS: list[str] = []
 
 
 # --- Tool definitions (what the LLM sees) ---
@@ -187,21 +187,14 @@ def read_faq() -> str:
 
 
 def _load_todos() -> list[str]:
-    """Load the to-do items from the JSON file. Returns an empty list if missing/invalid."""
-    try:
-        with open(TODO_FILE_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, list):
-            return data
-        return []
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
+    """Return the current in-memory to-do items."""
+    return _TODO_ITEMS
 
 
 def _save_todos(items: list[str]) -> None:
-    """Persist the to-do items to the JSON file."""
-    with open(TODO_FILE_PATH, "w", encoding="utf-8") as f:
-        json.dump(items, f, indent=2)
+    """Replace the in-memory to-do items."""
+    global _TODO_ITEMS
+    _TODO_ITEMS = items
 
 
 def add_todo_item(item: str) -> str:

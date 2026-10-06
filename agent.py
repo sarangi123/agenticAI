@@ -12,8 +12,12 @@ This "ReAct" (Reason + Act) pattern is the foundation of most AI agents.
 """
 
 import json
+import os
+
 from openai import OpenAI
-from tools import TOOL_DEFINITIONS, TOOL_REGISTRY
+
+from tools import TOOL_DEFINITIONS, TOOL_REGISTRY, FAQ_FILE_PATH, set_rag_store
+from rag import RagStore
 
 
 # System prompt tells the agent who it is and how to behave
@@ -28,11 +32,12 @@ sources, such as items on the to-do list. If you need numbers from the to-do
 list, first call read_todo_list, then pass the expression to calculator. Do not
 state a numeric result unless it came from the calculator tool.
 
-You also have access to a company FAQ via the read_faq tool. Whenever a user
-asks a question that could be answered by the FAQ (such as business hours,
-refunds, shipping, passwords, payment methods, contact info, or orders), call
-read_faq to look up the answer and base your response on its contents. If the
-FAQ does not contain the answer, say so clearly instead of guessing.
+You also have access to a company FAQ knowledge base. Whenever a user asks a
+question that could be answered by the FAQ (such as business hours, refunds,
+shipping, passwords, payment methods, contact info, or orders), call
+search_knowledge_base with the user's question. This uses semantic search (RAG)
+to return only the most relevant passages. Base your answer strictly on those
+passages. If they do not contain the answer, say so clearly instead of guessing.
 
 You can also manage a to-do list. When the user wants to add something but
 hasn't said what, ask them what they'd like to add first, then call
@@ -65,6 +70,14 @@ class Agent:
             {"role": "system", "content": SYSTEM_PROMPT}
         ]
 
+        # --- RAG setup ---
+        # Build the vector index once at startup, then hand it to the tools
+        # layer so the search_knowledge_base tool can use it.
+        self.rag_store = RagStore(self.client)
+        if os.path.exists(FAQ_FILE_PATH):
+            self.rag_store.build_from_file(FAQ_FILE_PATH)
+        set_rag_store(self.rag_store)
+
     def chat(self, user_message: str) -> str:
         """
         Process a user message through the agent loop.
@@ -83,7 +96,7 @@ class Agent:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=self.messages,
-                tools=[],
+                tools=TOOL_DEFINITIONS,
                 tool_choice="auto",  # Let the model decide whether to use a tool
             )
             print(f" llm response: {response}")

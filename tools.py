@@ -14,6 +14,16 @@ from datetime import datetime
 # Path to the FAQ file (sits next to this module)
 FAQ_FILE_PATH = os.path.join(os.path.dirname(__file__), "faq.txt")
 
+# The RAG store is created and indexed by the Agent at startup, then injected
+# here via set_rag_store(). It stays None until that happens.
+_RAG_STORE = None
+
+
+def set_rag_store(store) -> None:
+    """Give the tools layer a reference to the (already-indexed) RAG store."""
+    global _RAG_STORE
+    _RAG_STORE = store
+
 # In-memory store for the to-do list. This lives only while the program is
 # running; the list resets to empty every time the app restarts.
 _TODO_ITEMS: list[str] = []
@@ -77,6 +87,23 @@ TOOL_DEFINITIONS = [
                 "type": "object",
                 "properties": {},
                 "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_knowledge_base",
+            "description": "Search the company knowledge base (FAQ) using semantic search (RAG) and return only the most relevant passages for the user's question. Prefer this over read_faq: instead of returning the whole document, it retrieves just the chunks that best match the question (business hours, refunds, shipping, passwords, payment methods, contact info, orders).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The user's question to search the knowledge base for, e.g. 'How long do refunds take?'"
+                    }
+                },
+                "required": ["query"]
             }
         }
     },
@@ -186,6 +213,34 @@ def read_faq() -> str:
         return f"Error reading FAQ file: {e}"
 
 
+def search_knowledge_base(query: str) -> str:
+    """
+    RAG retrieval tool. Embeds the query, finds the most relevant FAQ chunks,
+    and returns only those passages (plus their similarity scores) so the LLM
+    can answer from a small, focused context instead of the whole document.
+    """
+    if _RAG_STORE is None:
+        return "The knowledge base is not available. Fall back to read_faq."
+
+    query = (query or "").strip()
+    if not query:
+        return "No search query was provided."
+
+    try:
+        results = _RAG_STORE.search(query, top_k=3)
+    except Exception as e:
+        return f"Error searching the knowledge base: {e}"
+
+    if not results:
+        return "The knowledge base is empty or contains no relevant information."
+
+    parts = [
+        f"[relevance {score:.2f}]\n{chunk}"
+        for chunk, score in results
+    ]
+    return "Most relevant knowledge-base passages:\n\n" + "\n\n---\n\n".join(parts)
+
+
 def _load_todos() -> list[str]:
     """Return the current in-memory to-do items."""
     return _TODO_ITEMS
@@ -247,6 +302,7 @@ TOOL_REGISTRY = {
     "get_current_time": get_current_time,
     "lookup_weather": lookup_weather,
     "read_faq": read_faq,
+    "search_knowledge_base": search_knowledge_base,
     "add_todo_item": add_todo_item,
     "remove_todo_item": remove_todo_item,
     "read_todo_list": read_todo_list,

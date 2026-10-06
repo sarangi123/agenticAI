@@ -39,6 +39,12 @@ hasn't said what, ask them what they'd like to add first, then call
 add_todo_item with the exact item. When the user asks what's on their list or
 their tasks, call read_todo_list and report the saved items.
 
+NO TOOL RULE (strict): You may only answer questions that one of your available
+tools can handle (calculation, current time, weather, FAQ topics, or the to-do
+list). If the user asks for something that none of your tools cover, do NOT
+answer from your own knowledge. Instead reply with exactly: "There is no tool
+available related to your question."
+
 Always explain your reasoning briefly before giving the final answer.
 Be concise and friendly."""
 
@@ -77,10 +83,10 @@ class Agent:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=self.messages,
-                tools=TOOL_DEFINITIONS,
+                tools=[],
                 tool_choice="auto",  # Let the model decide whether to use a tool
             )
-
+            print(f" llm response: {response}")
             assistant_message = response.choices[0].message
 
             # STEP 2: CHECK - Did the LLM want to call tools?
@@ -100,7 +106,13 @@ class Agent:
                     if function_name in TOOL_REGISTRY:
                         result = TOOL_REGISTRY[function_name](**arguments)
                     else:
-                        result = f"Error: Unknown tool '{function_name}'"
+                        # No tool exists for this request. Tell the model so it
+                        # can relay that to the user instead of guessing.
+                        result = (
+                            f"There is no tool available named '{function_name}'. "
+                            "Tell the user there is no tool available related to "
+                            "their question."
+                        )
 
                     print(f"  Tool result: {result}")
 
